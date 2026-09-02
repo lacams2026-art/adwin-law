@@ -244,8 +244,10 @@ function DATA_getNotice(id, cb){
     }
 
     /* 조회수 증가 : 방문자는 notices 를 수정할 수 없으므로 RPC 함수로 올립니다.
-       실패해도 본문 표시에는 영향이 없도록 조용히 넘깁니다. */
-    SB.rpc("increment_notice_views", { nid: Number(id) })["catch"](function(){});
+       ※ supabase-js 의 쿼리 객체는 .then() 만 있고 .catch() 가 없습니다.
+         .catch() 를 쓰면 여기서 예외가 나서 아래 cb() 가 실행되지 않습니다.
+         실패해도 본문 표시에는 영향이 없도록 then 의 두 번째 인자로 받습니다. */
+    SB.rpc("increment_notice_views", { nid: Number(id) }).then(function(){}, function(){});
 
     cb({
       row:  one.data,
@@ -498,13 +500,18 @@ function DATA_submitApplication(form, file, cb){
   }
 
   step.then(function(){
-    return SB.from("applications").insert([row]).select("id").single();
+    /* ※ .select() 를 붙이면 INSERT ... RETURNING 이 되어 SELECT 권한을 요구합니다.
+      상담신청은 "접수는 누구나, 열람은 관리자만" 정책이므로 방문자는 되돌려 받을 수
+      없습니다. 접수 번호는 화면에서 쓰지 않으므로 그냥 넣기만 합니다. */
+    return SB.from("applications").insert([row]);
   }).then(function(res){
     if(res.error){ throw res.error; }
-    cb({ ok:true, id: res.data.id });
+    cb({ ok:true });
   })["catch"](function(e){
     if(window.console){ console.error(e); }
-    /* 파일은 올라갔는데 저장이 실패하면 방금 올린 파일을 되돌립니다 */
+    /* 파일은 올라갔는데 저장이 실패하면 되돌리기를 시도합니다.
+      다만 방문자에게는 삭제 권한이 없어 대개 실패합니다. (권한을 열면 남의 파일도
+      지울 수 있게 되므로 열지 않습니다.) 남은 파일은 대시보드에서 가끔 정리하세요. */
     if(row.file_path){
       SB.storage.from(SB_BUCKET_APPLY).remove([row.file_path])["catch"](function(){});
     }
