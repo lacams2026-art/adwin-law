@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>공지사항 | 애드윈법무사사무소</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/board.css">
+</head>
+<body data-page="notice">
+<div id="awl-header"></div>
+<section class="awl-sv">
+  <div class="awl-sv-bg" style="background-image:url('assets/img/sub_bg_5.jpg')"></div>
+  <div class="awl-sv-inner">
+    <span class="awl-eyebrow">NOTICE</span>
+    <h2>공지사항</h2>
+    <p>사무소 소식과 등기 실무에 참고할 안내를 올립니다.</p>
+    <nav class="awl-bread"><span>HOME</span><span>/</span><span>공지사항</span></nav>
+  </div>
+</section>
+
+<section class="bd-sec">
+  <div class="awl-wrap bd-view" id="nvBox">
+    <p class="bd-loading">불러오는 중입니다.</p>
+  </div>
+</section>
+
+<div id="awl-footer"></div>
+
+<script src="assets/js/site.config.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/layout.js"></script>
+<script>
+(function(){
+  "use strict";
+  var id = AWL.query("id");
+  var box = document.getElementById("nvBox");
+
+  function nav(label, item){
+    if(!item){ return "<div class=\"nv-nav-row is-off\"><span>" + label + "</span><em>등록된 글이 없습니다.</em></div>"; }
+    return "<a class=\"nv-nav-row\" href=\"notice-view.html?id=" + item.id + "\">" +
+           "<span>" + label + "</span><em>" + DATA_esc(item.title) + "</em></a>";
+  }
+
+  DATA_getNotice(id, function(res){
+    if(!res.row){
+      box.innerHTML = "<p class=\"bd-loading\">해당 게시물을 찾을 수 없습니다. " +
+                      "<a class=\"bd-back\" href=\"notice.html\">목록으로</a></p>";
+      return;
+    }
+    var r = res.row;
+    box.innerHTML =
+      "<div class=\"bd-head\">" +
+        (r.is_top ? "<em class=\"nv-badge\">공지</em>" : "") +
+        "<h3>" + DATA_esc(r.title) + "</h3>" +
+        "<div class=\"nv-meta\"><span>" + DATA_esc(r.writer) + "</span><span>" + AWL.date(r.created_at) +
+        "</span><span>조회 " + Number(r.views || 0) + "</span></div>" +
+      "</div>" +
+      "<div class=\"nv-body\">" + DATA_esc(r.content || "").split("\n").join("<br>") + "</div>" +
+      "<div class=\"nv-nav\">" + nav("이전 글", res.prev) + nav("다음 글", res.next) + "</div>" +
+      "<div class=\"bd-btns\"><a class=\"awl-btn awl-btn--line\" href=\"notice.html\">목록으로</a></div>";
+  });
+})();
+</script>
+</body>
+</html>

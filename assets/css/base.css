@@ -1,0 +1,196 @@
+@charset "utf-8";
+/* ==========================================================================
+   base.css  |  공통 스타일 (토큰 / 헤더 / 푸터 / 서브비주얼 / 버튼 / 퀵버튼)
+   접두어 : awl-      ※ 이 파일만 전 페이지에 공통 적용됩니다.
+
+   [CSS 파일 구성]
+     base.css   전 페이지 공통          (모든 페이지에서 로드)
+     page.css   일반 페이지             (index / about / biz-* / apply / contact)
+     board.css  게시판                  (notice / notice-view / gallery / gallery-view)
+
+   [반응형 기준점] 아래 3개만 사용합니다. 새 기준점을 추가하지 마세요.
+     1080px  태블릿 가로 / 좁은 노트북
+      900px  태블릿 세로 (헤더가 모바일 메뉴로 전환되는 지점)
+      600px  모바일
+   ========================================================================== */
+
+/* --- 디자인 토큰 : 색상/폰트 변경은 여기만 수정 --------------------------- */
+:root{
+  --awl-ink:#0D1B2A;        /* 잉크 네이비 (본문 강조) */
+  --awl-navy:#16324B;       /* 메인 네이비 */
+  --awl-navy-l:#2A4E70;
+  --awl-seal:#A32E24;       /* 인주(도장) 레드 - 포인트 */
+  --awl-seal-l:#C7473C;
+  --awl-paper:#FFFFFF;
+  --awl-mist:#F2F5F8;       /* 서브 배경 */
+  --awl-mist-2:#E7EDF3;
+  --awl-line:#DCE3EA;       /* 괘선 */
+  --awl-gray:#5F6C7A;
+  --awl-gray-l:#8A97A5;
+  --awl-rose:#E3A9A3;       /* 어두운 배경 위 포인트 색 */
+
+  --awl-serif:"Noto Serif KR",Georgia,serif;
+  --awl-sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Malgun Gothic",sans-serif;
+  --awl-mono:"IBM Plex Mono","Courier New",monospace;
+
+  --awl-max:1240px;
+  --awl-hd:84px;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--awl-sans);color:var(--awl-ink);background:var(--awl-paper);
+  font-size:16px;line-height:1.7;letter-spacing:-.01em;word-break:keep-all;}
+img{max-width:100%;display:block;border:0}
+a{color:inherit;text-decoration:none}
+ul,ol{margin:0;padding:0;list-style:none}
+h1,h2,h3,h4,p,figure{margin:0}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--awl-seal);outline-offset:2px}
+
+.awl-wrap{width:100%;max-width:var(--awl-max);margin:0 auto;padding:0 24px}
+.awl-only-mo{display:none}
+
+/* --- 공통 라벨 / 버튼 ----------------------------------------------------- */
+.awl-eyebrow{font-family:var(--awl-mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--awl-seal);display:inline-flex;align-items:center;gap:10px}
+.awl-eyebrow::before{content:"";width:26px;height:1px;background:var(--awl-seal)}
+
+.awl-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:54px;padding:0 30px;font-size:15px;font-weight:600;border-radius:2px;
+  transition:.25s ease;white-space:nowrap}
+.awl-btn--fill{background:var(--awl-navy);color:#fff}
+.awl-btn--fill:hover{background:var(--awl-ink)}
+.awl-btn--seal{background:var(--awl-seal);color:#fff}
+.awl-btn--seal:hover{background:var(--awl-seal-l)}
+.awl-btn--line{border:1px solid var(--awl-line);color:var(--awl-ink);background:#fff}
+.awl-btn--line:hover{border-color:var(--awl-navy);background:var(--awl-mist)}
+
+/* --- 이미지 자리(플레이스홀더) -------------------------------------------
+   실제 이미지를 넣을 때 : <div class="awl-slot">…</div> 를
+   <img src="assets/img/파일명.jpg" alt="설명"> 로 교체하세요.            */
+.awl-slot{position:relative;width:100%;background:var(--awl-mist);
+  border:1px dashed #C3CEDA;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.awl-slot::after{content:attr(data-size);position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);font-family:var(--awl-mono);font-size:11px;
+  letter-spacing:.1em;color:var(--awl-gray-l);white-space:nowrap;pointer-events:none}
+.awl-slot:has(img)::after{display:none}
+.awl-slot:has(img){border:0;background:none}
+.awl-slot>img{width:100%;height:100%;object-fit:cover}
+.awl-slot--dark{background:#132538;border-color:#2C3F53}
+.awl-slot--dark::after{color:#5D7086}
+
+/* --- 헤더 ---------------------------------------------------------------- */
+.awl-header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.94);
+  backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid var(--awl-line)}
+.awl-hd-inner{max-width:var(--awl-max);margin:0 auto;padding:0 24px;height:var(--awl-hd);
+  display:flex;align-items:center;gap:28px}
+  .awl-logo{display:flex;align-items:center;flex:none}
+  .awl-logo img{height:40px;width:auto}
+.awl-gnb{margin-left:auto;display:flex;height:100%}
+.awl-gnb>li{position:relative;display:flex;align-items:center}
+.awl-gnb>li>a{padding:0 20px;font-size:16px;font-weight:600;height:100%;display:flex;align-items:center;position:relative}
+.awl-gnb>li>a::after{content:"";position:absolute;left:20px;right:20px;bottom:-1px;height:2px;
+  background:var(--awl-seal);transform:scaleX(0);transition:.25s}
+.awl-gnb>li:hover>a::after,.awl-gnb>li.is-active>a::after{transform:scaleX(1)}
+.awl-sub{position:absolute;top:100%;left:8px;min-width:190px;background:#fff;
+  border:1px solid var(--awl-line);border-top:2px solid var(--awl-seal);padding:10px 0;
+  opacity:0;visibility:hidden;transform:translateY(6px);transition:.22s}
+.awl-gnb>li:hover .awl-sub{opacity:1;visibility:visible;transform:translateY(0)}
+.awl-sub a{display:block;padding:9px 20px;font-size:14.5px;color:var(--awl-gray)}
+.awl-sub a:hover{color:var(--awl-seal);background:var(--awl-mist)}
+.awl-hd-util{display:flex;align-items:center;gap:16px;flex:none}
+.awl-hd-tel{font-family:var(--awl-mono);font-size:17px;font-weight:500;letter-spacing:.02em}
+.awl-hd-util .awl-btn{height:44px;padding:0 20px;font-size:14px}
+.awl-ham{display:none;width:44px;height:44px;margin-left:auto;position:relative}
+.awl-ham i{position:absolute;left:11px;width:22px;height:2px;background:var(--awl-ink);transition:.25s}
+.awl-ham i:nth-child(1){top:15px}.awl-ham i:nth-child(2){top:21px}.awl-ham i:nth-child(3){top:27px}
+body.awl-mo-open .awl-ham i:nth-child(1){top:21px;transform:rotate(45deg)}
+body.awl-mo-open .awl-ham i:nth-child(2){opacity:0}
+body.awl-mo-open .awl-ham i:nth-child(3){top:21px;transform:rotate(-45deg)}
+
+/* --- 모바일 메뉴 --------------------------------------------------------- */
+.awl-mo{position:fixed;inset:var(--awl-hd) 0 0;background:#fff;z-index:99;padding:24px;
+  overflow-y:auto;transform:translateX(100%);transition:.3s ease;visibility:hidden}
+body.awl-mo-open .awl-mo{transform:none;visibility:visible}
+body.awl-mo-open{overflow:hidden}
+.awl-mo>ul>li{border-bottom:1px solid var(--awl-line)}
+.awl-mo>ul>li>a{display:block;padding:17px 4px;font-size:18px;font-weight:700}
+.awl-mo-sub{padding:0 4px 16px}
+.awl-mo-sub a{display:block;padding:8px 0;color:var(--awl-gray);font-size:15px}
+.awl-mo-foot{margin-top:28px;padding:22px;background:var(--awl-mist)}
+.awl-mo-foot .awl-hd-tel{display:block;font-size:22px;margin-bottom:14px}
+.awl-mo-foot .awl-btn{width:100%}
+
+/* --- 서브 비주얼 --------------------------------------------------------- */
+.awl-sv{position:relative;background:var(--awl-navy);color:#fff;overflow:hidden}
+.awl-sv-bg{position:absolute;inset:0;background:#16324B center/cover no-repeat;opacity:.45}
+/* ↑ 배경 이미지 : style="background-image:url('assets/img/sub.jpg')" 로 지정 */
+.awl-sv-inner{position:relative;max-width:var(--awl-max);margin:0 auto;padding:74px 24px 66px}
+.awl-sv h2{font-family:var(--awl-serif);font-size:40px;font-weight:700;letter-spacing:-.03em;margin:14px 0 10px}
+.awl-sv p{color:rgba(255,255,255,.72);font-size:16px;max-width:640px}
+.awl-sv .awl-eyebrow{color:var(--awl-rose)}
+.awl-sv .awl-eyebrow::before{background:var(--awl-rose)}
+.awl-bread{margin-top:26px;font-family:var(--awl-mono);font-size:11.5px;letter-spacing:.12em;
+  color:rgba(255,255,255,.55);display:flex;gap:9px}
+
+/* --- 푸터 ---------------------------------------------------------------- */
+.awl-footer{background:var(--awl-ink);color:rgba(255,255,255,.62);margin-top:0}
+.awl-ft-top{border-bottom:1px solid rgba(255,255,255,.1)}
+.awl-ft-top .awl-wrap{display:flex;flex-wrap:wrap;gap:18px 34px;align-items:center;padding-top:20px;padding-bottom:20px}
+.awl-ft-top a{font-size:14px}
+.awl-ft-top a:hover{color:#fff}
+.awl-ft-main{padding:52px 0 60px;display:grid;grid-template-columns:1.1fr 1fr;gap:40px}
+.awl-ft-logo{margin-bottom:20px}
+.awl-ft-logo img{height:32px;width:auto}
+.awl-ft-info{font-size:14px;line-height:2.1}
+.awl-ft-info b{color:rgba(255,255,255,.85);font-weight:500}
+.awl-ft-copy{font-family:var(--awl-mono);font-size:11.5px;letter-spacing:.04em;color:rgba(255,255,255,.38);margin-top:18px}
+/* 관리자 로그인 : 눈에 띄지 않게, 그러나 찾으면 보이도록 */
+.awl-ft-admin{display:inline-block;margin-left:14px;padding:2px 8px;
+  border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.42);
+  font-size:11px;letter-spacing:.02em;transition:.2s}
+.awl-ft-admin:hover{border-color:rgba(255,255,255,.4);color:#fff}
+.awl-ft-right{text-align:right}
+.awl-ft-tel{font-family:var(--awl-mono);font-size:30px;color:#fff;letter-spacing:.01em}
+.awl-ft-hours{font-size:14px;margin-top:12px;line-height:1.9}
+
+/* --- 우측 하단 퀵 버튼 --------------------------------------------------- */
+.awl-quick{position:fixed;right:20px;bottom:20px;z-index:90;display:flex;flex-direction:column;gap:8px}
+.awl-quick a,.awl-quick button{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;background:var(--awl-navy);color:#fff;font-size:12px;font-weight:700;
+  box-shadow:0 6px 18px rgba(13,27,42,.25);transition:.2s}
+.awl-quick a:hover,.awl-quick button:hover{background:var(--awl-seal)}
+.awl-quick .awl-top{background:#fff;color:var(--awl-navy);border:1px solid var(--awl-line)}
+
+/* --- 스크롤 등장 (JS 실패 시에도 항상 보이도록 설계) --------------------- */
+html.awl-js [data-reveal]{opacity:0;transform:translateY(22px)}
+html.awl-js [data-reveal].is-in{opacity:1;transform:none;transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.3,1)}
+@media (prefers-reduced-motion:reduce){
+  html.awl-js [data-reveal]{opacity:1;transform:none}
+  *{animation:none!important;transition:none!important}
+}
+
+/* --- 반응형 -------------------------------------------------------------- */
+@media (max-width:1080px){
+  .awl-hd-util .awl-hd-tel{display:none}
+}
+@media (max-width:900px){
+  :root{--awl-hd:64px}
+  .awl-logo img{height:32px}
+  .awl-only-mo{display:block}
+  .awl-gnb,.awl-hd-util{display:none}
+  .awl-ham{display:block}
+  .awl-sv h2{font-size:29px}
+  .awl-sv-inner{padding:48px 24px 42px}
+  .awl-ft-main{grid-template-columns:1fr;gap:30px;padding:42px 0 46px}
+  .awl-ft-right{text-align:left}
+  .awl-ft-top .awl-wrap{gap:12px 22px}
+  .awl-quick{right:14px;bottom:14px}
+  .awl-quick a,.awl-quick button{width:46px;height:46px}
+}
+@media (max-width:600px){
+  .awl-wrap{padding:0 18px}
+  body{font-size:15px}
+}

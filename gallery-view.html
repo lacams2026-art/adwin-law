@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>갤러리 | 애드윈법무사사무소</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/board.css">
+</head>
+<body data-page="gallery">
+<div id="awl-header"></div>
+<section class="awl-sv">
+  <div class="awl-sv-bg" style="background-image:url('assets/img/sub_bg_4.jpg')"></div>
+  <div class="awl-sv-inner">
+    <span class="awl-eyebrow">GALLERY</span>
+    <h2>갤러리</h2>
+    <p>사무소 공간과 업무 현장을 사진으로 전해 드립니다.</p>
+    <nav class="awl-bread"><span>HOME</span><span>/</span><span>갤러리</span></nav>
+  </div>
+</section>
+
+<section class="bd-sec">
+  <div class="awl-wrap bd-view" id="gvBox">
+    <p class="bd-loading">불러오는 중입니다.</p>
+  </div>
+</section>
+
+<div id="awl-footer"></div>
+
+<script src="assets/js/site.config.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/layout.js"></script>
+<script>
+(function(){
+  "use strict";
+  var id = AWL.query("id");
+  var box = document.getElementById("gvBox");
+
+  DATA_getGalleryItem(id, function(res){
+    if(!res.row){
+      box.innerHTML = "<p class=\"bd-loading\">해당 게시물을 찾을 수 없습니다. " +
+                      "<a class=\"bd-back\" href=\"gallery.html\">목록으로</a></p>";
+      return;
+    }
+    var r = res.row;
+    var imgs = (r.images && r.images.length) ? r.images : [];
+    var pics = "", i;
+
+    if(imgs.length){
+      for(i=0;i<imgs.length;i++){
+        pics += "<div class=\"gv-img\"><img src=\"" + imgs[i].full +
+                "\" alt=\"" + DATA_esc(r.title) + " 사진 " + (i+1) + "\"></div>";
+      }
+    }else if(r.image_url){
+      pics = "<div class=\"gv-img\"><img src=\"" + r.image_url +
+             "\" alt=\"" + DATA_esc(r.title) + "\" onerror=\"this.remove()\"></div>";
+    }else{
+      pics = "<div class=\"gv-img awl-slot\" data-size=\"원본 이미지 1200 x 800\"></div>";
+    }
+
+    box.innerHTML =
+      "<div class=\"bd-head gv-head\"><h3>" + DATA_esc(r.title) + "</h3>" +
+      "<time>" + AWL.date(r.created_at) +
+      (imgs.length > 1 ? " · 사진 " + imgs.length + "장" : "") + "</time></div>" +
+      pics +
+      "<p class=\"gv-desc\">" + DATA_esc(r.description || "").split("\n").join("<br>") + "</p>" +
+      "<div class=\"bd-btns\"><a class=\"awl-btn awl-btn--line\" href=\"gallery.html\">목록으로</a></div>";
+  });
+})();
+</script>
+</body>
+</html>

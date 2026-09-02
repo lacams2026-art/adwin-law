@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>관리자 로그인 | 애드윈법무사사무소</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body class="ad-body">
+
+<div class="ad-login">
+  <form class="ad-login-box" id="adForm" novalidate>
+    <div class="ad-login-logo"><img id="adLogo" src="assets/img/logo.png" alt=""></div>
+    <h1>관리자 로그인</h1>
+    <p>공지사항 · 갤러리 관리</p>
+
+    <div class="ad-row">
+      <label class="ad-label" for="adId">아이디</label>
+      <input type="text" id="adId" class="ad-input" autocomplete="username" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="ad-row">
+      <label class="ad-label" for="adPw">비밀번호</label>
+      <input type="password" id="adPw" class="ad-input" autocomplete="current-password">
+    </div>
+
+    <p class="ad-msg" id="adMsg" hidden></p>
+    <button type="submit" class="ad-btn ad-btn--seal" id="adBtn">로그인</button>
+    <a class="ad-login-back" href="index.html">← 홈페이지로 돌아가기</a>
+
+    <!-- ⚠ 임시 안내 : Supabase Auth 연동 후 이 블록을 삭제하세요 -->
+    <div class="ad-login-tip">
+      <b>임시 계정 : admin / adwin1234</b><br>
+      현재는 브라우저에만 저장되는 시안용 로그인입니다.
+      실제 운영 전에 Supabase Auth 연동이 필요합니다.
+    </div>
+  </form>
+</div>
+
+<script src="assets/js/site.config.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* 로고 경로는 site.config.js 를 따릅니다 */
+  var logo = document.getElementById("adLogo");
+  if(SITE && SITE.logo){ logo.src = SITE.logo; logo.alt = SITE.name; }
+
+  /* 이미 로그인했다면 바로 관리 화면으로 */
+  if(DATA_isAdmin()){ window.location.replace("admin.html"); return; }
+
+  var form = document.getElementById("adForm");
+  var msg  = document.getElementById("adMsg");
+  var btn  = document.getElementById("adBtn");
+  var busy = false;
+
+  function fail(text, el){
+    msg.textContent = text;
+    msg.className = "ad-msg";
+    msg.hidden = false;
+    if(el && el.focus){ el.focus(); }
+  }
+
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    if(busy){ return; }
+    msg.hidden = true;
+
+    var id = document.getElementById("adId");
+    var pw = document.getElementById("adPw");
+    if(!id.value.trim()){ return fail("아이디를 입력해 주세요.", id); }
+    if(!pw.value){ return fail("비밀번호를 입력해 주세요.", pw); }
+
+    busy = true;
+    btn.disabled = true;
+    btn.textContent = "확인 중";
+
+    DATA_login(id.value.trim(), pw.value, function(res){
+      if(res.ok){
+        window.location.replace("admin.html");
+        return;
+      }
+      busy = false;
+      btn.disabled = false;
+      btn.textContent = "로그인";
+      pw.value = "";
+      fail(res.message, pw);
+    });
+  });
+})();
+</script>
+</body>
+</html>

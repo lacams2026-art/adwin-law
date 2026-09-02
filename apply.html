@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>상담신청 | 애드윈법무사사무소</title>
+  <meta name="description" content="애드윈법무사사무소 온라인 상담신청. 부동산등기, 법인등기, 경매, 개인회생·파산 상담을 접수합니다.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/page.css">
+</head>
+<body data-page="apply">
+<div id="awl-header"></div>
+<section class="awl-sv">
+  <div class="awl-sv-bg" style="background-image:url('assets/img/sub_bg_3.jpg')"></div>
+  <div class="awl-sv-inner">
+    <span class="awl-eyebrow">ONLINE CONSULTING</span>
+    <h2>온라인 상담신청</h2>
+    <p>사안을 남겨 주시면 영업일 기준 1일 이내에 담당자가 연락드립니다.</p>
+    <nav class="awl-bread"><span>HOME</span><span>/</span><span>상담신청</span></nav>
+  </div>
+</section>
+
+<section class="ap-sec">
+  <div class="awl-wrap ap-inner">
+
+    <!-- ------------- 신청 폼 ------------- -->
+    <form class="ap-form" id="apForm" novalidate>
+      <div class="ap-form-head">
+        <span class="awl-eyebrow">APPLICATION</span>
+        <h3>상담 신청서</h3>
+        <p><i>*</i> 표시는 필수 입력 항목입니다.</p>
+      </div>
+
+      <div class="ap-row">
+        <label class="ap-label" for="apField">상담 분야 <i>*</i></label>
+        <select id="apField" name="field" class="ap-select" required>
+          <option value="">선택해 주세요</option>
+          <option value="부동산등기">부동산등기</option>
+          <option value="법인등기">법인등기</option>
+          <option value="경매·공매">경매·공매</option>
+          <option value="개인회생·파산">개인회생·파산</option>
+          <option value="민사·가사 서류">민사·가사 서류</option>
+          <option value="기타">기타 문의</option>
+        </select>
+      </div>
+
+      <div class="ap-row ap-row--half">
+        <div>
+          <label class="ap-label" for="apName">성함 <i>*</i></label>
+          <input type="text" id="apName" name="name" class="ap-input" placeholder="홍길동" autocomplete="name" required>
+        </div>
+        <div>
+          <label class="ap-label" for="apPhone">연락처 <i>*</i></label>
+          <input type="tel" id="apPhone" name="phone" class="ap-input" placeholder="010-0000-0000" autocomplete="tel" required>
+        </div>
+      </div>
+
+      <div class="ap-row ap-row--half">
+        <div>
+          <label class="ap-label" for="apEmail">이메일</label>
+          <input type="email" id="apEmail" name="email" class="ap-input" placeholder="example@email.com" autocomplete="email">
+        </div>
+        <div>
+          <label class="ap-label" for="apDate">희망 상담일</label>
+          <input type="date" id="apDate" name="prefer_date" class="ap-input">
+        </div>
+      </div>
+
+      <div class="ap-row">
+        <label class="ap-label" for="apMsg">상담 내용 <i>*</i></label>
+        <textarea id="apMsg" name="message" class="ap-textarea" rows="7"
+          placeholder="예) 아파트 매매 잔금이 3주 뒤입니다. 소유권이전등기 비용과 준비 서류를 알고 싶습니다." required></textarea>
+      </div>
+
+      <!-- ================= 파일 첨부 =================
+           · 여러 개를 골라도 서버로 올라가는 파일은 항상 1개입니다.
+             2개 이상이면 브라우저에서 zip 1개로 묶어 전송합니다.
+           · 용량/확장자 검사는 아래 스크립트 상단의 FILE_* 값으로 조정합니다.
+           ============================================ -->
+      <div class="ap-row">
+        <label class="ap-label" for="apFile">
+          파일 첨부
+          <span class="ap-hint">(선택 · 총 10MB 이하 · 최대 5개 · 2개 이상은 자동으로 압축됩니다)</span>
+        </label>
+
+        <input type="file" id="apFile" name="file" class="ap-file" multiple
+          accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.hwp,.hwpx,.doc,.docx,.xls,.xlsx,.zip">
+        <label class="ap-drop" id="apDrop" for="apFile">
+          <span class="ap-drop-txt">파일을 끌어다 놓거나 <span>여기를 클릭</span>해 선택하세요</span>
+          <span class="ap-drop-sub">PDF · JPG · PNG · HWP · DOC · XLS · ZIP</span>
+        </label>
+
+        <ul class="ap-files" id="apFiles"></ul>
+        <p class="ap-f-sum" id="apFileSum" hidden></p>
+        <p class="ap-f-msg" id="apFileMsg" hidden></p>
+
+        <div class="ap-zip" id="apZip" hidden>
+          <div class="ap-zip-track"><div class="ap-zip-bar" id="apZipBar"></div></div>
+          <p class="ap-zip-txt" id="apZipTxt">압축 준비 중</p>
+        </div>
+      </div>
+
+      <!-- 스팸 방지용 숨김 항목 : 사람 눈에는 보이지 않습니다. 지우지 마세요. -->
+      <div class="ap-hp" aria-hidden="true">
+        <label for="apCompany">회사명</label>
+        <input type="text" id="apCompany" name="company" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="ap-agree">
+        <label class="ap-check">
+          <input type="checkbox" id="apAgree" name="agree" required>
+          <span>개인정보 수집·이용에 동의합니다. <i>*</i></span>
+        </label>
+        <details class="ap-terms">
+          <summary>수집 항목 및 이용 목적 보기</summary>
+          <p>
+            수집 항목 : 성함, 연락처, 이메일, 상담 내용, 첨부 파일<br>
+            이용 목적 : 상담 신청 확인 및 회신<br>
+            보유 기간 : 상담 종료 후 3개월 이내 파기<br>
+            동의를 거부하실 수 있으나, 이 경우 상담 신청이 접수되지 않습니다.
+          </p>
+        </details>
+      </div>
+
+      <p class="ap-error" id="apError" hidden></p>
+
+      <div class="ap-submit">
+        <button type="submit" class="awl-btn awl-btn--seal ap-btn" id="apBtn">상담 신청하기</button>
+      </div>
+    </form>
+
+    <!-- ------------- 우측 안내 ------------- -->
+    <aside class="ap-side">
+      <div class="ap-side-box">
+        <span class="awl-eyebrow">CONTACT</span>
+        <h4>전화 상담</h4>
+        <a class="ap-tel" href="tel:0269255235">02-6925-5235</a>
+        <p class="ap-hours">평일 09:00 - 18:00<br>점심 12:30 - 13:30<br>주말·공휴일 예약 상담</p>
+      </div>
+      <div class="ap-side-note">
+        <h4>신청 전에 확인해 주세요</h4>
+        <ul>
+          <li>사안과 관련된 날짜(계약일, 잔금일, 통지 받은 날)를 함께 적어 주시면 상담이 빨라집니다.</li>
+          <li>등기부등본이나 계약서가 있으시면 첨부해 주세요.</li>
+          <li>접수 후 영업일 기준 1일 이내에 남겨주신 연락처로 회신드립니다.</li>
+        </ul>
+      </div>
+      <div class="ap-side-map">
+        <div class="awl-slot ap-map-img" style="background-image:url('assets/img/apply.jpg'); border:none;"></div>
+        <!-- <div class="awl-slot ap-map-img" data-size="이미지 480 x 320"></div> -->
+        <p>서울특별시 금천구 가산디지털1로 5<br>대륭테크노타운20차 1801호</p>
+        <a class="ap-map-link" href="contact.html">오시는 길 자세히 보기</a>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- 신청 완료 안내 -->
+<div class="ap-done" id="apDone" hidden>
+  <div class="ap-done-box">
+    <strong>상담 신청이 접수되었습니다.</strong>
+    <p>영업일 기준 1일 이내에 남겨주신 연락처로 연락드리겠습니다.</p>
+    <button type="button" class="awl-btn awl-btn--fill" id="apDoneBtn">확인</button>
+  </div>
+</div>
+
+<div id="awl-footer"></div>
+
+<script src="assets/js/site.config.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/layout.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ======================================================================
+     첨부파일 설정  ─ 정책을 바꾸려면 이 6줄만 수정하세요
+     ====================================================================== */
+  var FILE_MAX_MB    = 10;                                   /* 전체 합계 상한 */
+  var FILE_MAX_COUNT = 5;                                    /* 선택 가능 개수 */
+  var FILE_EXT       = ["pdf","jpg","jpeg","png","gif","webp",
+                        "hwp","hwpx","doc","docx","xls","xlsx","zip"];
+  var JSZIP_URL      = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
+  var MIN_FILL_MS    = 3000;                                 /* 이 시간 안에 제출되면 봇으로 간주 */
+  var MAX_BYTES      = FILE_MAX_MB * 1024 * 1024;
+
+  /* ---------------------------------------------------------------- 요소 */
+  var form    = document.getElementById("apForm");
+  var err     = document.getElementById("apError");
+  var btn     = document.getElementById("apBtn");
+  var done    = document.getElementById("apDone");
+  var input   = document.getElementById("apFile");
+  var drop    = document.getElementById("apDrop");
+  var listEl  = document.getElementById("apFiles");
+  var sumEl   = document.getElementById("apFileSum");
+  var msgEl   = document.getElementById("apFileMsg");
+  var zipBox  = document.getElementById("apZip");
+  var zipBar  = document.getElementById("apZipBar");
+  var zipTxt  = document.getElementById("apZipTxt");
+
+  var picked   = [];              /* 사용자가 고른 File 목록 */
+  var openedAt = Date.now();
+  var sending  = false;
+
+  /* ---------------------------------------------------------------- 유틸 */
+  function extOf(name){
+    var s = String(name || ""), i = s.lastIndexOf(".");
+    return i > -1 ? s.substring(i+1).toLowerCase() : "";
+  }
+  function baseOf(name){
+    var s = String(name || ""), i = s.lastIndexOf(".");
+    return i > -1 ? s.substring(0, i) : s;
+  }
+  function fmtSize(bytes){
+    if(bytes < 1024){ return bytes + " B"; }
+    if(bytes < 1024*1024){ return (bytes/1024).toFixed(0) + " KB"; }
+    return (bytes/1024/1024).toFixed(1) + " MB";
+  }
+  function totalBytes(){
+    var n = 0, i;
+    for(i=0;i<picked.length;i++){ n += picked[i].size; }
+    return n;
+  }
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+                    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+  function fileMsg(text){
+    if(text){ msgEl.textContent = text; msgEl.hidden = false; }
+    else{ msgEl.hidden = true; }
+  }
+  function ymd(){
+    var d = new Date();
+    return d.getFullYear() + ("0"+(d.getMonth()+1)).slice(-2) + ("0"+d.getDate()).slice(-2);
+  }
+
+  /* ------------------------------------------------------- 파일 추가/제거 */
+  function addFiles(fileList){
+    var reject = [], i, f, ext;
+    fileMsg("");
+
+    for(i=0;i<fileList.length;i++){
+      f   = fileList[i];
+      ext = extOf(f.name);
+
+      if(picked.length >= FILE_MAX_COUNT){
+        reject.push("최대 " + FILE_MAX_COUNT + "개까지 첨부할 수 있습니다.");
+        break;
+      }
+      if(FILE_EXT.indexOf(ext) === -1){
+        reject.push("‘" + f.name + "’ 은 첨부할 수 없는 형식입니다.");
+        continue;
+      }
+      if(f.size === 0){
+        reject.push("‘" + f.name + "’ 은 빈 파일입니다.");
+        continue;
+      }
+      if(totalBytes() + f.size > MAX_BYTES){
+        reject.push("전체 용량이 " + FILE_MAX_MB + "MB 를 넘어 ‘" + f.name + "’ 은 제외했습니다.");
+        continue;
+      }
+      /* 같은 파일 중복 선택 방지 */
+      var dup = false, k;
+      for(k=0;k<picked.length;k++){
+        if(picked[k].name === f.name && picked[k].size === f.size){ dup = true; }
+      }
+      if(dup){ continue; }
+
+      picked.push(f);
+    }
+
+    if(reject.length){ fileMsg(reject[0]); }
+    render();
+  }
+
+  function render(){
+    var h = "", i, f;
+    for(i=0;i<picked.length;i++){
+      f = picked[i];
+      h += "<li>" +
+             "<span class=\"ap-f-ext\">" + esc(extOf(f.name) || "file") + "</span>" +
+             "<span class=\"ap-f-name\">" + esc(f.name) + "</span>" +
+             "<span class=\"ap-f-size\">" + fmtSize(f.size) + "</span>" +
+             "<button type=\"button\" class=\"ap-f-del\" data-i=\"" + i + "\" " +
+               "aria-label=\"" + esc(f.name) + " 첨부 취소\">&times;</button>" +
+           "</li>";
+    }
+    listEl.innerHTML = h;
+
+    if(picked.length){
+      sumEl.hidden = false;
+      sumEl.innerHTML = "총 <b>" + picked.length + "</b>개 · <b>" + fmtSize(totalBytes()) + "</b>" +
+        (picked.length > 1 ? " · 전송 시 zip 파일 1개로 묶입니다." : "");
+    }else{
+      sumEl.hidden = true;
+    }
+
+    /* input 을 비워 두어 같은 파일을 다시 고를 수 있게 합니다 */
+    try{ input.value = ""; }catch(e){}
+  }
+
+  listEl.addEventListener("click", function(e){
+    var i = e.target.getAttribute && e.target.getAttribute("data-i");
+    if(i === null || i === undefined){ return; }
+    picked.splice(parseInt(i, 10), 1);
+    fileMsg("");
+    render();
+  });
+
+  input.addEventListener("change", function(){
+    if(this.files && this.files.length){ addFiles(this.files); }
+  });
+
+  /* --------------------------------------------------------- 드래그 앤 드롭 */
+  ["dragenter","dragover"].forEach(function(ev){
+    drop.addEventListener(ev, function(e){
+      e.preventDefault(); e.stopPropagation();
+      drop.classList.add("is-over");
+    });
+  });
+  ["dragleave","drop"].forEach(function(ev){
+    drop.addEventListener(ev, function(e){
+      e.preventDefault(); e.stopPropagation();
+      drop.classList.remove("is-over");
+    });
+  });
+  drop.addEventListener("drop", function(e){
+    var dt = e.dataTransfer;
+    if(dt && dt.files && dt.files.length){ addFiles(dt.files); }
+  });
+  /* 페이지 밖으로 파일을 흘렸을 때 브라우저가 파일을 열어버리는 것 방지 */
+  window.addEventListener("dragover", function(e){ e.preventDefault(); });
+  window.addEventListener("drop",     function(e){ e.preventDefault(); });
+
+  /* ------------------------------------------------------------ 압축 처리 */
+  var zipLoading = false;
+  function loadJSZip(cb){
+    if(window.JSZip){ return cb(true); }
+    if(zipLoading){ return setTimeout(function(){ loadJSZip(cb); }, 200); }
+    zipLoading = true;
+    var s = document.createElement("script");
+    s.src = JSZIP_URL;
+    s.onload  = function(){ zipLoading = false; cb(!!window.JSZip); };
+    s.onerror = function(){ zipLoading = false; cb(false); };
+    document.head.appendChild(s);
+  }
+
+  /* 업로드할 파일 1개를 만들어 cb 로 넘깁니다.
+     null  = 첨부 없음
+     false = 압축 실패                                            */
+  function buildUpload(cb){
+    if(picked.length === 0){ return cb(null); }
+    if(picked.length === 1){ return cb(picked[0]); }
+
+    zipBox.hidden = false;
+    zipBar.style.width = "0%";
+    zipTxt.textContent = "압축 도구를 불러오는 중";
+
+    loadJSZip(function(ok){
+      if(!ok){ zipBox.hidden = true; return cb(false); }
+
+      var zip = new JSZip(), seen = {}, i, f, nm, n;
+      for(i=0;i<picked.length;i++){
+        f  = picked[i];
+        nm = f.name;
+        n  = 1;
+        /* 파일명이 겹치면 "이름 (2).pdf" 형태로 바꿔 담습니다 */
+        while(seen[nm]){
+          n++;
+          nm = baseOf(f.name) + " (" + n + ")" + (extOf(f.name) ? "." + extOf(f.name) : "");
+        }
+        seen[nm] = true;
+        /* 한글 파일명은 UTF-8 플래그와 함께 저장됩니다.
+           최신 Windows 탐색기 / 알집 / 반디집에서 정상적으로 보입니다. */
+        zip.file(nm, f);
+      }
+
+      zipTxt.textContent = "압축 중 0%";
+      zip.generateAsync(
+        { type:"blob", compression:"DEFLATE", compressionOptions:{ level:6 } },
+        function(meta){
+          var p = Math.round(meta.percent);
+          zipBar.style.width = p + "%";
+          zipTxt.textContent = "압축 중 " + p + "%";
+        }
+      ).then(function(blob){
+        zipBox.hidden = true;
+        var who  = document.getElementById("apName").value.trim() || "신청";
+        var name = "상담첨부_" + who + "_" + ymd() + ".zip";
+        var out;
+        try{
+          out = new File([blob], name, { type:"application/zip" });
+        }catch(e){
+          out = blob;          /* File 생성자를 지원하지 않는 브라우저 대비 */
+          out.name = name;
+        }
+        cb(out);
+      })["catch"](function(e){
+        if(window.console){ console.error(e); }
+        zipBox.hidden = true;
+        cb(false);
+      });
+    });
+  }
+
+  /* ------------------------------------------------------------ 폼 제출 */
+  function fail(msg, el){
+    err.textContent = msg;
+    err.hidden = false;
+    if(el && el.focus){ el.focus(); }
+    return false;
+  }
+  function reset(){
+    sending = false;
+    btn.disabled = false;
+    btn.textContent = "상담 신청하기";
+  }
+
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    if(sending){ return; }
+    err.hidden = true;
+
+    /* 봇 차단 1 : 숨김 항목이 채워져 있으면 조용히 무시 */
+    if(document.getElementById("apCompany").value){ return; }
+
+    var field = document.getElementById("apField");
+    var name  = document.getElementById("apName");
+    var phone = document.getElementById("apPhone");
+    var email = document.getElementById("apEmail");
+    var msg   = document.getElementById("apMsg");
+    var agree = document.getElementById("apAgree");
+
+    if(!field.value){ return fail("상담 분야를 선택해 주세요.", field); }
+    if(!name.value.trim()){ return fail("성함을 입력해 주세요.", name); }
+    if(!/^[0-9\-\+\s]{9,20}$/.test(phone.value.trim())){ return fail("연락처를 숫자로 정확히 입력해 주세요.", phone); }
+    if(email.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())){
+      return fail("이메일 주소를 다시 확인해 주세요.", email);
+    }
+    if(msg.value.trim().length < 10){ return fail("상담 내용을 10자 이상 입력해 주세요.", msg); }
+    if(!agree.checked){ return fail("개인정보 수집·이용에 동의해 주세요.", agree); }
+
+    /* 봇 차단 2 : 항목은 모두 맞는데 페이지를 열자마자 제출된 경우.
+       사람이 직접 입력하면 3초 이상 걸리므로 자동 입력으로 봅니다.
+       (검증을 통과한 뒤에 확인해야 실제 사용자에게 엉뚱한 안내가 뜨지 않습니다) */
+    if(Date.now() - openedAt < MIN_FILL_MS){
+      return fail("잠시 후 다시 시도해 주세요.");
+    }
+
+    var data = {
+      field:       field.value,
+      name:        name.value.trim(),
+      phone:       phone.value.trim(),
+      email:       email.value.trim(),
+      prefer_date: document.getElementById("apDate").value,
+      message:     msg.value.trim(),
+      agree:       true
+    };
+
+    sending = true;
+    btn.disabled = true;
+    btn.textContent = picked.length > 1 ? "첨부 파일 압축 중" : "접수 중입니다";
+
+    buildUpload(function(file){
+      if(file === false){
+        reset();
+        return fail("첨부 파일을 압축하지 못했습니다. 파일을 1개만 첨부하시거나, 직접 zip 으로 묶어 올려 주세요.");
+      }
+      btn.textContent = "접수 중입니다";
+
+      DATA_submitApplication(data, file, function(res){
+        reset();
+        if(res && res.ok){
+          form.reset();
+          picked = [];
+          render();
+          fileMsg("");
+          done.hidden = false;
+          openedAt = Date.now();     /* 연속 재전송 방지 */
+        }else{
+          fail("접수에 실패했습니다. 잠시 후 다시 시도하시거나 전화로 연락해 주세요.");
+        }
+      });
+    });
+  });
+
+  document.getElementById("apDoneBtn").addEventListener("click", function(){
+    done.hidden = true;
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>게시물 관리 | 애드윈법무사사무소</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body class="ad-body">
+
+<header class="ad-top">
+  <div class="ad-top-inner">
+    <a class="ad-brand" href="admin.html">애드윈법무사사무소 <span>ADMIN</span></a>
+    <div class="ad-top-util">
+      <a href="index.html">사이트 보기</a>
+      <button type="button" id="adLogout">로그아웃</button>
+    </div>
+  </div>
+</header>
+
+<div class="ad-wrap">
+
+  <!-- ⚠ 임시 저장 안내 : Supabase 연동 후 이 블록을 삭제하세요 -->
+  <div class="ad-notice">
+    <b>지금은 시안용 임시 저장 상태입니다.</b> 작성한 글은 <b>이 브라우저에만</b> 저장되며,
+    다른 PC나 방문자에게는 보이지 않습니다. 브라우저 기록을 지우면 함께 사라집니다.
+    실제로 공개하려면 Supabase 연동이 필요합니다.
+  </div>
+
+  <div class="ad-head">
+    <div>
+      <h2>게시물 관리</h2>
+      <p>공지사항과 갤러리를 등록·수정·삭제할 수 있습니다.</p>
+    </div>
+  </div>
+
+  <div class="ad-tabs">
+    <button type="button" class="ad-tab is-on" data-tab="notice">공지사항</button>
+    <button type="button" class="ad-tab" data-tab="gallery">갤러리</button>
+    <button type="button" class="ad-tab" data-tab="apply">상담신청</button>
+  </div>
+
+  <div class="ad-filter" id="adFilter" hidden></div>
+
+  <div class="ad-bar">
+    <p class="ad-count">전체 <b id="adCount">0</b>건</p>
+    <a class="ad-btn ad-btn--seal" id="adNew" href="admin-write.html?type=notice">+ 새 글 쓰기</a>
+  </div>
+
+  <div id="adListBox"></div>
+
+  <!-- 저장소 사용량 -->
+  <div class="ad-quota">
+    브라우저 임시 저장소 사용량
+    <div class="ad-quota-bar"><div class="ad-quota-fill" id="adQuotaFill"></div></div>
+    <b id="adQuotaTxt">0 KB</b> / 약 5 MB &nbsp;·&nbsp;
+    갤러리 사진을 많이 올리면 금방 찹니다. 가득 차면 저장이 실패합니다.
+  </div>
+</div>
+
+<script src="assets/js/site.config.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+(function(){
+  "use strict";
+  if(!DATA_requireAdmin()){ return; }
+
+  var tab      = "notice";
+  var listBox  = document.getElementById("adListBox");
+  var countEl  = document.getElementById("adCount");
+  var newBtn   = document.getElementById("adNew");
+  var filterEl = document.getElementById("adFilter");
+
+  /* ---------------- 저장소 사용량 ---------------- */
+  function quota(){
+    var q = DATA_storageInfo();
+    var fill = document.getElementById("adQuotaFill");
+    fill.style.width = q.percent + "%";
+    fill.className = "ad-quota-fill" + (q.percent >= 80 ? " is-warn" : "");
+    document.getElementById("adQuotaTxt").textContent =
+      q.used > 1024*1024 ? (q.used/1024/1024).toFixed(1) + " MB"
+                         : Math.round(q.used/1024) + " KB";
+  }
+
+  /* ---------------- 공지 목록 ---------------- */
+  function renderNotice(){
+    DATA_getNotices({ page:1, size:9999, keyword:"" }, function(res){
+      countEl.textContent = res.total;
+      if(!res.total){
+        listBox.innerHTML = "<p class=\"ad-empty\">등록된 공지사항이 없습니다.</p>";
+        return;
+      }
+      var h = "<table class=\"ad-table\"><thead><tr>" +
+              "<th class=\"ad-c-id\">번호</th><th>제목</th>" +
+              "<th class=\"ad-c-dt\">작성일</th><th class=\"ad-c-hit\">조회</th>" +
+              "<th class=\"ad-c-act\">관리</th></tr></thead><tbody>";
+      var i, r;
+      for(i=0;i<res.rows.length;i++){
+        r = res.rows[i];
+        h += "<tr>" +
+          "<td class=\"ad-c-id\">" + (r.is_top ? "-" : r._no) + "</td>" +
+          "<td class=\"ad-tit\">" +
+            (r.is_top ? "<em class=\"ad-pin\">공지</em>" : "") +
+            "<a href=\"notice-view.html?id=" + r.id + "\">" + DATA_esc(r.title) + "</a>" +
+          "</td>" +
+          "<td class=\"ad-c-dt\" data-l=\"작성일\">" + DATA_esc(r.created_at) + "</td>" +
+          "<td class=\"ad-c-hit\" data-l=\"조회\">" + Number(r.views || 0) + "</td>" +
+          "<td class=\"ad-c-act\">" +
+            "<a class=\"ad-btn ad-btn--line ad-btn--sm\" href=\"admin-write.html?type=notice&id=" + r.id + "\">수정</a>" +
+            "<button type=\"button\" class=\"ad-btn ad-btn--danger ad-btn--sm\" " +
+              "data-del=\"" + r.id + "\" data-title=\"" + DATA_esc(r.title) + "\">삭제</button>" +
+          "</td></tr>";
+      }
+      listBox.innerHTML = h + "</tbody></table>";
+    });
+  }
+
+  /* ---------------- 갤러리 목록 ---------------- */
+  function renderGallery(){
+    DATA_getGallery({ page:1, size:9999, sort:"latest", keyword:"" }, function(res){
+      countEl.textContent = res.total;
+      if(!res.total){
+        listBox.innerHTML = "<p class=\"ad-empty\">등록된 갤러리 게시물이 없습니다.</p>";
+        return;
+      }
+      var h = "<table class=\"ad-table\"><thead><tr>" +
+              "<th class=\"ad-c-id\">번호</th><th class=\"ad-c-thumb\">대표</th><th>제목</th>" +
+              "<th class=\"ad-c-hit\">사진</th><th class=\"ad-c-dt\">작성일</th>" +
+              "<th class=\"ad-c-act\">관리</th></tr></thead><tbody>";
+      var i, r, n;
+      for(i=0;i<res.rows.length;i++){
+        r = res.rows[i];
+        n = (r.images && r.images.length) ? r.images.length : 0;
+        h += "<tr>" +
+          "<td class=\"ad-c-id\">" + r.id + "</td>" +
+          "<td class=\"ad-c-thumb\"><span class=\"ad-thumb\">" +
+            (r.thumb_url ? "<img src=\"" + r.thumb_url + "\" alt=\"\">" : "없음") +
+          "</span></td>" +
+          "<td class=\"ad-tit\"><a href=\"gallery-view.html?id=" + r.id + "\">" + DATA_esc(r.title) + "</a></td>" +
+          "<td class=\"ad-c-hit\" data-l=\"사진\"><span class=\"ad-imgcnt\">" + n + "장</span></td>" +
+          "<td class=\"ad-c-dt\" data-l=\"작성일\">" + DATA_esc(r.created_at) + "</td>" +
+          "<td class=\"ad-c-act\">" +
+            "<a class=\"ad-btn ad-btn--line ad-btn--sm\" href=\"admin-write.html?type=gallery&id=" + r.id + "\">수정</a>" +
+            "<button type=\"button\" class=\"ad-btn ad-btn--danger ad-btn--sm\" " +
+              "data-del=\"" + r.id + "\" data-title=\"" + DATA_esc(r.title) + "\">삭제</button>" +
+          "</td></tr>";
+      }
+      listBox.innerHTML = h + "</tbody></table>";
+    });
+  }
+
+  /* ##########################################################################
+     상담신청 접수내역
+     ########################################################################## */
+  var applyStatus = "전체";
+
+  function subFilter(counts, all){
+    var list = ["전체"].concat(APPLY_STATUS), h = "", i, k, n;
+    for(i=0;i<list.length;i++){
+      k = list[i];
+      n = (k === "전체") ? all : (counts[k] || 0);
+      h += "<button type=\"button\" class=\"ad-fbtn" + (k === applyStatus ? " is-on" : "") + "\" " +
+           "data-st=\"" + k + "\">" + k + " <b>" + n + "</b></button>";
+    }
+    filterEl.innerHTML = h;
+  }
+
+  function subCard(r){
+    var st   = r.status || "접수";
+    var opts = "", i;
+    for(i=0;i<APPLY_STATUS.length;i++){
+      opts += "<option" + (APPLY_STATUS[i] === st ? " selected" : "") + ">" + APPLY_STATUS[i] + "</option>";
+    }
+
+    /* 연락처·이메일은 눌러서 바로 걸거나 보낼 수 있게 */
+    var tel  = String(r.phone || "").split("-").join("");
+    var mail = r.email
+      ? "<a href=\"mailto:" + DATA_esc(r.email) + "\">" + DATA_esc(r.email) + "</a>"
+      : "<span style=\"color:#AAB4BE\">미입력</span>";
+    var want = r.prefer_date
+      ? DATA_esc(r.prefer_date)
+      : "<span style=\"color:#AAB4BE\">미지정</span>";
+
+    /* 첨부파일 : 지금은 이름·용량만. Supabase Storage 연동 후 다운로드가 열립니다 */
+    var file = r.file_name
+      ? "<span class=\"ad-file-chip\">" + DATA_esc(r.file_name) +
+          " <b>" + DATA_fileSize(r.file_size) + "</b></span>" +
+        "<span class=\"ad-file-lock\">Supabase 연동 후 내려받기 가능</span>"
+      : "<span style=\"color:#AAB4BE\">없음</span>";
+
+    /* 메모 */
+    var memos = r.memos || [], m = "";
+    if(memos.length){
+      for(i=0;i<memos.length;i++){
+        m += "<div class=\"ad-memo-item\">" +
+               "<p>" + DATA_esc(memos[i].text) + "</p>" +
+               "<span class=\"ad-memo-at\">" + DATA_esc(memos[i].at) + "</span>" +
+               "<button type=\"button\" class=\"ad-memo-del\" data-memo=\"" + memos[i].id +
+                 "\" aria-label=\"메모 삭제\">&times;</button>" +
+             "</div>";
+      }
+    }else{
+      m = "<div class=\"ad-memo-none\">아직 메모가 없습니다.</div>";
+    }
+
+    return "<article class=\"ad-sub\" data-id=\"" + r.id + "\">" +
+      "<div class=\"ad-sub-hd\">" +
+        "<span class=\"ad-sub-name\">" + DATA_esc(r.name) + "</span>" +
+        "<span class=\"ad-sub-field\">" + DATA_esc(r.field) + "</span>" +
+        "<em class=\"ad-badge\" data-s=\"" + st + "\">" + st + "</em>" +
+        "<span class=\"ad-sub-at\">" + DATA_esc(r.created_at) + "</span>" +
+      "</div>" +
+      "<div class=\"ad-sub-body\">" +
+        "<dl class=\"ad-dl\">" +
+          "<dt>연락처</dt><dd><a href=\"tel:" + DATA_esc(tel) + "\">" + DATA_esc(r.phone) + "</a></dd>" +
+          "<dt>이메일</dt><dd>" + mail + "</dd>" +
+          "<dt>희망일</dt><dd>" + want + "</dd>" +
+          "<dt>첨부</dt><dd>" + file + "</dd>" +
+        "</dl>" +
+        "<div class=\"ad-sub-msg\">" + DATA_esc(r.message || "") + "</div>" +
+      "</div>" +
+      "<div class=\"ad-sub-act\">" +
+        "<label for=\"st" + r.id + "\">상태</label>" +
+        "<select class=\"ad-select ad-st\" id=\"st" + r.id + "\">" + opts + "</select>" +
+        "<button type=\"button\" class=\"ad-btn ad-btn--fill ad-btn--sm ad-st-save\">상태 저장</button>" +
+        "<button type=\"button\" class=\"ad-btn ad-btn--danger ad-btn--sm ad-del\" " +
+          "data-name=\"" + DATA_esc(r.name) + "\">삭제</button>" +
+      "</div>" +
+      "<div class=\"ad-memo\">" +
+        "<p class=\"ad-memo-h\">처리 메모<span>" + memos.length + "</span></p>" +
+        "<div class=\"ad-memo-list\">" + m + "</div>" +
+        "<div class=\"ad-memo-add\">" +
+          "<input type=\"text\" class=\"ad-memo-in\" maxlength=\"200\" " +
+            "placeholder=\"처리 내용을 적어 두세요 (예: 1차 통화 완료)\">" +
+          "<button type=\"button\" class=\"ad-btn ad-btn--line ad-memo-send\">추가</button>" +
+        "</div>" +
+      "</div>" +
+    "</article>";
+  }
+
+  function renderApply(){
+    DATA_getApplications({ status: applyStatus, keyword:"" }, function(res){
+      countEl.textContent = res.total;
+      subFilter(res.counts, res.all);
+      if(!res.total){
+        listBox.innerHTML = "<p class=\"ad-empty\">" +
+          (applyStatus === "전체" ? "접수된 상담신청이 없습니다."
+                                  : "‘" + applyStatus + "’ 상태인 신청이 없습니다.") + "</p>";
+        return;
+      }
+      var h = "", i;
+      for(i=0;i<res.rows.length;i++){ h += subCard(res.rows[i]); }
+      listBox.innerHTML = h;
+    });
+  }
+
+  /* 상태 필터 클릭 */
+  filterEl.addEventListener("click", function(e){
+    var st = e.target.getAttribute && e.target.getAttribute("data-st");
+    if(!st){ return; }
+    applyStatus = st;
+    renderApply();
+  });
+
+  /* 카드 안 동작 : 상태 저장 / 삭제 / 메모 추가 / 메모 삭제 */
+  listBox.addEventListener("click", function(e){
+    if(tab !== "apply"){ return; }
+    var card = e.target.closest ? e.target.closest(".ad-sub") : null;
+    if(!card){ return; }
+    var id = card.getAttribute("data-id");
+    var t  = e.target;
+
+    if(t.classList.contains("ad-st-save")){
+      var sel = card.querySelector(".ad-st");
+      t.disabled = true; t.textContent = "저장 중";
+      DATA_updateApplication(id, { status: sel.value }, function(res){
+        if(!res.ok){ window.alert("상태 저장에 실패했습니다."); }
+        renderApply(); quota();
+      });
+      return;
+    }
+    if(t.classList.contains("ad-del")){
+      var who = t.getAttribute("data-name") || "";
+      if(!window.confirm("‘" + who + "’ 님의 상담신청을 삭제할까요?\n메모까지 함께 지워지며 되돌릴 수 없습니다.")){ return; }
+      DATA_deleteApplication(id, function(res){
+        if(!res.ok){ window.alert("삭제에 실패했습니다."); }
+        renderApply(); quota();
+      });
+      return;
+    }
+    if(t.classList.contains("ad-memo-send")){
+      addMemo(card, id);
+      return;
+    }
+    var mid = t.getAttribute("data-memo");
+    if(mid){
+      if(!window.confirm("이 메모를 삭제할까요?")){ return; }
+      DATA_updateApplication(id, { delMemo: mid }, function(){ renderApply(); quota(); });
+    }
+  });
+
+  function addMemo(card, id){
+    var input = card.querySelector(".ad-memo-in");
+    var btn   = card.querySelector(".ad-memo-send");
+    var text  = input.value.trim();
+    if(!text){ input.focus(); return; }
+    btn.disabled = true; btn.textContent = "추가 중";
+    DATA_updateApplication(id, { addMemo: text }, function(res){
+      if(!res.ok){
+        btn.disabled = false; btn.textContent = "추가";
+        window.alert("메모 저장에 실패했습니다. 저장소 용량을 확인해 주세요.");
+        return;
+      }
+      renderApply(); quota();
+    });
+  }
+
+  /* 메모 입력창에서 Enter 로도 추가 */
+  listBox.addEventListener("keydown", function(e){
+    if(tab !== "apply" || e.key !== "Enter") { return; }
+    if(!e.target.classList || !e.target.classList.contains("ad-memo-in")){ return; }
+    e.preventDefault();
+    var card = e.target.closest(".ad-sub");
+    if(card){ addMemo(card, card.getAttribute("data-id")); }
+  });
+
+  function render(){
+    /* 상담신청 탭에서는 글쓰기 버튼 대신 상태 필터를 씁니다 */
+    newBtn.hidden   = (tab === "apply");
+    filterEl.hidden = (tab !== "apply");
+    if(tab !== "apply"){ newBtn.href = "admin-write.html?type=" + tab; }
+
+    if(tab === "notice"){ renderNotice(); }
+    else if(tab === "gallery"){ renderGallery(); }
+    else{ renderApply(); }
+    quota();
+  }
+
+  /* ---------------- 탭 ---------------- */
+  var tabs = document.querySelectorAll(".ad-tab");
+  for(var t=0;t<tabs.length;t++){
+    tabs[t].addEventListener("click", function(){
+      var k;
+      for(k=0;k<tabs.length;k++){ tabs[k].classList.remove("is-on"); }
+      this.classList.add("is-on");
+      tab = this.getAttribute("data-tab");
+      render();
+    });
+  }
+
+  /* ---------------- 삭제 ---------------- */
+  listBox.addEventListener("click", function(e){
+    if(tab === "apply"){ return; }
+    var id = e.target.getAttribute && e.target.getAttribute("data-del");
+    if(!id){ return; }
+    var title = e.target.getAttribute("data-title") || "";
+    if(!window.confirm("‘" + title + "’ 을(를) 삭제할까요?\n삭제한 글은 되돌릴 수 없습니다.")){ return; }
+
+    var done = function(res){
+      if(!res.ok){ window.alert("삭제에 실패했습니다."); }
+      render();
+    };
+    if(tab === "notice"){ DATA_deleteNotice(id, done); }
+    else{ DATA_deleteGallery(id, done); }
+  });
+
+  /* ---------------- 로그아웃 ---------------- */
+  document.getElementById("adLogout").addEventListener("click", function(){
+    DATA_logout();
+    window.location.replace("admin-login.html");
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

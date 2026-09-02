@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>갤러리 | 애드윈법무사사무소</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/board.css">
+</head>
+<body data-page="gallery">
+<div id="awl-header"></div>
+<section class="awl-sv">
+  <div class="awl-sv-bg" style="background-image:url('assets/img/sub_bg_4.jpg')"></div>
+  <div class="awl-sv-inner">
+    <span class="awl-eyebrow">GALLERY</span>
+    <h2>갤러리</h2>
+    <p>사무소 공간과 업무 현장을 사진으로 전해 드립니다.</p>
+    <nav class="awl-bread"><span>HOME</span><span>/</span><span>갤러리</span></nav>
+  </div>
+</section>
+
+<section class="bd-sec">
+  <div class="awl-wrap">
+    <div class="bd-bar gl-bar">
+      <p class="bd-total">전체 <b id="glTotal">0</b>건</p>
+      <div class="gl-bar-right">
+        <select class="gl-sort" id="glSort" aria-label="정렬 기준">
+          <option value="latest">최신순</option>
+          <option value="oldest">오래된순</option>
+          <option value="title">제목순</option>
+        </select>
+        <form class="bd-search" id="glSearchForm" onsubmit="return false;">
+          <input type="text" id="glKeyword" placeholder="제목 검색" aria-label="갤러리 검색">
+          <button type="submit">검색</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="gl-grid" id="glGrid"></div>
+    <p class="bd-empty" id="glEmpty" hidden>검색 결과가 없습니다. 다른 단어로 찾아보세요.</p>
+    <div class="bd-pager" id="glPager"></div>
+  </div>
+</section>
+
+<div id="awl-footer"></div>
+
+<script src="assets/js/site.config.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/layout.js"></script>
+<script>
+(function(){
+  "use strict";
+  var state = { page:1, size:8, sort:"latest", keyword:"" };
+
+  function render(){
+    DATA_getGallery(state, function(res){
+      var h = "", i, r, n;
+      for(i=0;i<res.rows.length;i++){
+        r = res.rows[i];
+        n = (r.images && r.images.length) ? r.images.length : 0;
+        h += "<a class=\"gl-card\" href=\"gallery-view.html?id=" + r.id + "\">" +
+             "<span class=\"gl-thumb awl-slot\" data-size=\"썸네일 400 x 300\">" +
+             (r.thumb_url ? "<img src=\"" + r.thumb_url + "\" alt=\"\" onerror=\"this.remove()\">" : "") +
+             (n > 1 ? "<em class=\"gl-count\">" + n + "</em>" : "") +
+             "</span>" +
+             "<strong class=\"gl-tit\">" + DATA_esc(r.title) + "</strong>" +
+             "<time class=\"gl-date\">" + AWL.date(r.created_at) + "</time></a>";
+      }
+      document.getElementById("glGrid").innerHTML = h;
+      document.getElementById("glTotal").textContent = res.total;
+      document.getElementById("glEmpty").hidden = res.total !== 0;
+      document.getElementById("glPager").innerHTML = DATA_pager(res.total, state.page, state.size, "bd-");
+    });
+  }
+
+  document.getElementById("glSort").addEventListener("change", function(){
+    state.sort = this.value; state.page = 1; render();
+  });
+  document.getElementById("glSearchForm").addEventListener("submit", function(){
+    state.keyword = document.getElementById("glKeyword").value; state.page = 1; render();
+  });
+  document.getElementById("glPager").addEventListener("click", function(e){
+    var go = e.target.getAttribute("data-go");
+    if(go){ state.page = parseInt(go, 10); render(); window.scrollTo({ top:0, behavior:"smooth" }); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
