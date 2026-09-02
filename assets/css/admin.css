@@ -145,6 +145,17 @@ body.ad-body{background:var(--awl-mist)}
   padding-top:24px;border-top:1px solid var(--awl-line);flex-wrap:wrap}
 .ad-foot .ad-del-wrap{margin-right:auto}
 
+/* 통신 오류 배너 */
+.ad-err{padding:14px 18px;background:rgba(163,46,36,.07);border-left:3px solid var(--awl-seal);
+  color:var(--awl-seal);font-size:14.5px;font-weight:600;margin-bottom:20px;line-height:1.6}
+.ad-err[hidden]{display:none}
+.ad-foot-note{margin-top:26px;font-size:13px;color:var(--awl-gray-l);font-family:var(--awl-mono)}
+
+/* 첨부 내려받기 버튼 */
+button.ad-file-chip{cursor:pointer;transition:.2s}
+button.ad-file-chip:hover{border-color:var(--awl-navy);background:var(--awl-mist-2)}
+button.ad-file-chip:disabled{opacity:.5;cursor:default}
+
 /* ---------- 저장소 사용량 ---------- */
 .ad-quota{margin-top:26px;padding:18px 20px;background:#fff;border:1px solid var(--awl-line);
   font-size:13.5px;color:var(--awl-gray)}

@@ -21,8 +21,9 @@
     <p>공지사항 · 갤러리 관리</p>
 
     <div class="ad-row">
-      <label class="ad-label" for="adId">아이디</label>
-      <input type="text" id="adId" class="ad-input" autocomplete="username" autocapitalize="off" spellcheck="false">
+      <label class="ad-label" for="adId">이메일</label>
+      <input type="email" id="adId" class="ad-input" autocomplete="username"
+        autocapitalize="off" spellcheck="false" placeholder="admin@example.com">
     </div>
     <div class="ad-row">
       <label class="ad-label" for="adPw">비밀번호</label>
@@ -33,15 +34,15 @@
     <button type="submit" class="ad-btn ad-btn--seal" id="adBtn">로그인</button>
     <a class="ad-login-back" href="index.html">← 홈페이지로 돌아가기</a>
 
-    <!-- ⚠ 임시 안내 : Supabase Auth 연동 후 이 블록을 삭제하세요 -->
     <div class="ad-login-tip">
-      <b>임시 계정 : admin / adwin1234</b><br>
-      현재는 브라우저에만 저장되는 시안용 로그인입니다.
-      실제 운영 전에 Supabase Auth 연동이 필요합니다.
+      Supabase Auth 로 인증합니다. 계정 추가·비밀번호 변경은
+      Supabase 대시보드의 <b>Authentication &gt; Users</b> 에서 하세요.
     </div>
   </form>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase.config.js"></script>
 <script src="assets/js/site.config.js"></script>
 <script src="assets/js/data.js"></script>
 <script>
@@ -52,13 +53,13 @@
   var logo = document.getElementById("adLogo");
   if(SITE && SITE.logo){ logo.src = SITE.logo; logo.alt = SITE.name; }
 
-  /* 이미 로그인했다면 바로 관리 화면으로 */
-  if(DATA_isAdmin()){ window.location.replace("admin.html"); return; }
-
   var form = document.getElementById("adForm");
   var msg  = document.getElementById("adMsg");
   var btn  = document.getElementById("adBtn");
   var busy = false;
+
+  /* 이미 로그인한 상태면 바로 관리 화면으로 보냅니다 */
+  DATA_isAdmin(function(ok){ if(ok){ window.location.replace("admin.html"); } });
 
   function fail(text, el){
     msg.textContent = text;
@@ -74,7 +75,10 @@
 
     var id = document.getElementById("adId");
     var pw = document.getElementById("adPw");
-    if(!id.value.trim()){ return fail("아이디를 입력해 주세요.", id); }
+    if(!id.value.trim()){ return fail("이메일을 입력해 주세요.", id); }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(id.value.trim())){
+      return fail("이메일 형식을 확인해 주세요.", id);
+    }
     if(!pw.value){ return fail("비밀번호를 입력해 주세요.", pw); }
 
     busy = true;

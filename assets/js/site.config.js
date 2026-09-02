@@ -11,7 +11,7 @@ var SITE = {
   ceo:       "애드윈",
   address:   "서울특별시 금천구 가산디지털1로 5 (가산동, 대륭테크노타운20차) 1801호",
   tel:       "02-6925-5235",
-  email:     "adwin_law@test.com",
+  email:     "lacams2026@gmail.com",
   bizNo:     "000-00-00000",
   copyright: "Copyright(c) 애드윈법무사사무소. All Rights Reserved.",
   hours:     "평일 09:00 - 18:00 / 점심 12:30 - 13:30<br>토·일요일, 공휴일 휴무 (사전 예약 시 상담 가능)"

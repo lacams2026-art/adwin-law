@@ -21,7 +21,7 @@ adwin-law/
 ├─ admin-write.html      [관리자] 글쓰기 · 수정
 └─ assets/
    ├─ css/  base.css / page.css / board.css / admin.css   (4개)
-   ├─ js/   site.config.js / layout.js / data.js
+   ├─ js/   supabase.config.js / site.config.js / layout.js / data.js
    └─ img/  이미지
 ```
 
@@ -90,33 +90,36 @@ var MIN_FILL_MS    = 3000; // 이 시간 안에 제출되면 봇으로 간주
 > zip 안의 한글 파일명은 UTF-8 로 저장됩니다.
 > 최신 Windows 탐색기, 알집, 반디집에서 정상적으로 보입니다.
 
-## Supabase 연동 지점
+## data.js 함수 목록
 
-`assets/js/data.js` 안의 아래 5개 함수 내부만 교체하면 됩니다. (HTML 수정 불필요)
+HTML 은 아래 함수만 호출합니다. Supabase 쿼리는 전부 `data.js` 안에 있습니다.
 
-- `DATA_getNotices()` 공지 목록 (검색·페이징)
-- `DATA_getNotice()` 공지 상세 + 이전/다음 글
-- `DATA_getGallery()` 갤러리 목록 (정렬 latest/oldest/title · 페이징)
-- `DATA_getGalleryItem()` 갤러리 상세
-- `DATA_submitApplication(form, file, cb)` 상담신청 저장 (file 인자 있음)
-- `DATA_saveNotice(row, cb)` / `DATA_deleteNotice(id, cb)` 공지 저장·삭제
-- `DATA_saveGallery(row, cb)` / `DATA_deleteGallery(id, cb)` 갤러리 저장·삭제
-- `DATA_login(id, pw, cb)` / `DATA_isAdmin()` / `DATA_logout()` 관리자 인증
-- `DATA_getApplications(opt, cb)` 상담신청 목록 (상태 필터 · 상태별 건수)
-- `DATA_updateApplication(id, patch, cb)` 상태 변경 / 메모 추가 / 메모 삭제
-- `DATA_deleteApplication(id, cb)` 상담신청 삭제
+| 함수 | 설명 |
+|---|---|
+| `DATA_getNotices(opt, cb)` | 공지 목록 (검색·페이징·글번호 계산) |
+| `DATA_getNotice(id, cb)` | 공지 상세 + 이전/다음 글 + 조회수 증가 |
+| `DATA_saveNotice(row, cb)` | 공지 저장 (id 있으면 수정) |
+| `DATA_deleteNotice(id, cb)` | 공지 삭제 |
+| `DATA_getGallery(opt, cb)` | 갤러리 목록 (정렬 latest/oldest/title) |
+| `DATA_getGalleryItem(id, cb)` | 갤러리 상세 |
+| `DATA_saveGallery(row, cb, onProgress)` | 사진 업로드 + 저장 |
+| `DATA_deleteGallery(id, cb)` | 갤러리 삭제 (사진 파일까지) |
+| `DATA_submitApplication(form, file, cb)` | 상담 접수 (첨부 업로드 포함) |
+| `DATA_getApplications(opt, cb)` | 상담 목록 (상태 필터·건수) |
+| `DATA_updateApplication(id, patch, cb)` | 상태 변경 / 메모 추가·삭제 |
+| `DATA_deleteApplication(id, cb)` | 상담 삭제 (첨부까지) |
+| `DATA_getFileUrl(path, cb)` | 첨부 임시 주소(60초) 발급 |
+| `DATA_login / isAdmin / logout / requireAdmin` | 관리자 인증 |
 
-`data.js` 안의 **"1. 임시 저장소"** 블록은 Supabase 연동 시 통째로 삭제하면 됩니다.
+모든 함수는 실패 시 `cb({ ok:false, message:"..." })` 로 사유를 돌려줍니다.
 
-권장 테이블 구조와 Storage 업로드 예시 코드는 `data.js` 상단·중간 주석에 적어 두었습니다.
-`DATA_safeFileName()` 은 한글 파일명을 안전한 저장 경로로 바꿔 주는 도우미입니다.
+### 저장 순서와 되돌리기
+- 상담 접수 : Storage 업로드 → DB insert. **insert 가 실패하면 방금 올린 파일을 지웁니다.**
+- 갤러리 저장 : 새로 고른 사진만 업로드하고 기존 사진은 그대로 둡니다.
+- 삭제 : Storage 파일을 먼저 지우고 DB 행을 지웁니다. 파일 삭제가 실패해도 글은 지웁니다.
 
-### 연동 시 주의
-- **Storage 버킷은 반드시 Private 으로** 만드세요. 계약서·등기부등본은 개인정보라
-  Public 버킷이면 URL 을 아는 누구나 열람할 수 있습니다. 관리자 화면에서는
-  `createSignedUrl()` 로 열람합니다.
-- 저장 경로는 영문/숫자로만 만들고, 원래 한글 파일명은 `file_name` 컬럼에 따로 보관합니다.
-- Storage 업로드 → DB insert 순서이므로, insert 실패 시 고아 파일 정리가 필요합니다.
+`DATA_safeFileName()` 이 한글 파일명을 영문 저장 경로로 바꿔 줍니다.
+원래 파일명은 `file_name` 컬럼에 그대로 보관합니다.
 
 ## 관리자 화면
 
@@ -133,54 +136,69 @@ var MIN_FILL_MS    = 3000; // 이 시간 안에 제출되면 봇으로 간주
 로그인하지 않고 관리자 주소로 접근하면 로그인 화면으로 되돌려 보냅니다.
 로그인 상태는 `sessionStorage` 라서 **브라우저를 닫으면 자동 로그아웃**됩니다.
 
-### ⚠ 지금의 로그인은 보안 기능이 아닙니다
+### 로그인
 
-정적 사이트(GitHub Pages)에서는 비밀번호가 소스 보기로 그대로 노출됩니다.
-개발자도구로 값을 바꾸면 관리자 화면도 열립니다.
+Supabase Auth(이메일 + 비밀번호)로 인증합니다.
+계정 추가·비밀번호 변경은 **Supabase 대시보드 → Authentication → Users** 에서 합니다.
 
-**실제 보안은 Supabase Auth + RLS 정책이 담당해야 합니다.**
-RLS 에서 "로그인한 관리자만 INSERT/UPDATE/DELETE" 를 걸어두면,
-관리자 화면을 억지로 열어도 저장 자체가 서버에서 거부됩니다.
-실제 데이터를 넣기 전에 반드시 Supabase 연동을 끝내세요.
+로그인 세션은 브라우저에 저장되어 새로고침해도 유지되고, 로그아웃하면 지워집니다.
 
-### 지금의 저장 방식 — 브라우저 임시 저장
+> **Authentication → Sign In / Providers → Email 의 "Allow new users to sign up" 은 반드시 꺼두세요.**
+> 켜져 있으면 누구나 가입해서 `authenticated` 권한을 얻고, 공지·갤러리를 쓰고
+> 상담신청을 전부 열람할 수 있게 됩니다.
 
-작성한 글은 `localStorage` 에 저장됩니다. 시안 확인용입니다.
+### 보안은 RLS 가 담당합니다
 
-- 글을 **쓴 그 브라우저에서만** 보입니다. 다른 PC·시크릿창·방문자에게는 안 보입니다.
-- 저장소 용량은 **약 5MB** 입니다. 관리자 화면 하단에 사용량 막대가 있습니다.
-- 갤러리 사진은 브라우저에서 자동으로 크기를 줄여 저장합니다.
-  (상세용 긴 변 1200px / 썸네일 480px, JPEG) — `admin-write.html` 상단 `IMG_*` 값으로 조정합니다.
-- 가득 차면 저장이 실패하고 안내 문구가 뜹니다. Supabase 연동 후에는 사라지는 제약입니다.
-- 저장된 내용을 초기화하려면 브라우저 개발자도구 → Application → Local Storage 에서
-  `awl_notices_v1`, `awl_gallery_v1`, `awl_applications_v1` 을 삭제하면 샘플 데이터로 되돌아갑니다.
+`admin.html` 은 주소만 알면 누구나 열 수 있습니다. 그래도 안전한 이유는
+**실제 권한을 Supabase 의 RLS(Row Level Security) 정책이 막기 때문**입니다.
 
-### 상담신청 접수내역 (관리자 전용)
+| 대상 | 읽기 | 쓰기·수정·삭제 |
+|---|---|---|
+| `notices` / `gallery` | 누구나 | 로그인한 관리자만 |
+| `applications` | **관리자만** | 접수(INSERT)는 누구나, 나머지는 관리자만 |
+| `gallery` 버킷 | 누구나 (공개) | 관리자만 |
+| `applications` 버킷 | 관리자만 (비공개) | 업로드는 누구나 |
 
-`admin.html` → **상담신청** 탭에서 폼으로 들어온 신청을 확인하고 메모할 수 있습니다.
-공개 페이지에는 어디에도 노출되지 않습니다.
+로그인하지 않고 관리자 화면을 열면 화면은 뜨더라도 서버가 데이터를 주지 않고,
+저장을 시도해도 정책 위반으로 거부됩니다.
 
-- 카드 한 장에 신청자 · 분야 · 연락처 · 이메일 · 희망일 · 첨부 · 상담 내용이 모두 보입니다.
-- 연락처는 눌러서 바로 전화, 이메일은 눌러서 바로 메일 작성으로 이어집니다.
-- **상태** : 접수 / 상담중 / 보류 / 완료. 상단 필터로 상태별로 걸러 볼 수 있고 건수도 표시됩니다.
-- **처리 메모** : 한 건에 여러 개를 시간 순으로 쌓습니다. 입력 후 Enter 로도 추가되고, 개별 삭제됩니다.
-- 상태 목록을 바꾸려면 `data.js` 의 `APPLY_STATUS` 배열을 수정하세요.
-  뱃지 색은 `admin.css` 의 `.ad-badge[data-s="..."]` 에 있습니다.
+`assets/js/supabase.config.js` 의 publishable 키는 **공개돼도 되는 키**입니다.
+반대로 `sb_secret_...` 나 `service_role` 키는 RLS 를 무시하므로 **절대 넣지 마세요.**
+이 저장소는 Public 이라 넣는 순간 DB 전체가 열립니다.
 
-> **첨부파일은 이름·용량만 기록됩니다.**
-> 10MB zip 을 브라우저 저장소에 넣으면 용량이 즉시 초과되기 때문입니다.
-> 실제 내려받기는 Supabase Storage 연동 후 `file_path` 로 열립니다
-> (Private 버킷 + `createSignedUrl()`).
+### 상담 첨부파일
+
+비공개 버킷에 저장되고, 관리자 화면에서 파일명을 누르면 **60초짜리 임시 주소**를
+발급받아 새 창으로 엽니다. 주소가 유출돼도 1분 뒤에는 열리지 않습니다.
 
 ### 갤러리 사진 여러 장
 - 첫 번째 사진이 목록 대표 이미지가 됩니다. ← → 버튼으로 순서를 바꿀 수 있습니다.
 - 목록 썸네일에는 2장 이상일 때 장수 뱃지가 표시됩니다.
 - 상세 화면에는 모든 사진이 위에서 아래로 나열됩니다.
-- Supabase 연동 시에는 `gallery_images` 1:N 테이블로 옮기면 됩니다 (`data.js` 주석 참고).
+- 업로드 전에 브라우저에서 크기를 줄입니다 (원본 1600px / 썸네일 600px).
+  `admin-write.html` 상단의 `IMG_*` 값으로 조정합니다.
+- Storage 의 `gallery` 버킷에 저장되고, 글을 지우면 사진 파일도 함께 지워집니다.
+
+## Supabase 설정 요약
+
+| 항목 | 값 |
+|---|---|
+| Project URL | `https://siklggdytfzecugjapcb.supabase.co` |
+| 배포 주소 | `https://adwinkorea.github.io/adwin-law/` |
+| 테이블 | `notices` / `gallery` / `applications` |
+| 버킷 | `gallery` (공개) / `applications` (비공개) |
+| RPC | `increment_notice_views(nid)` — 조회수 증가 |
+
+프로젝트를 옮기면 `assets/js/supabase.config.js` 의 URL·키 두 줄만 고치면 됩니다.
 
 ## 아직 안 되어 있는 것
-- Supabase 연동 (관리자 인증 · 게시판 저장 · 상담신청 접수)
 - favicon, 404.html, robots.txt, sitemap.xml, OG 태그
+  (하위 경로 배포라 robots·sitemap 은 어차피 크롤러가 읽지 않습니다)
+- 개인정보 수집 동의 여부를 DB 에 남기려면 아래 SQL 을 실행하고
+  `data.js` 의 `DATA_submitApplication` 에 `agree: true` 를 추가하세요.
+  ```sql
+  alter table public.applications add column agree boolean not null default true;
+  ```
 - `assets/img/` 실제 이미지
 - 사업자등록번호가 `000-00-00000` 더미값
 - about / contact 의 연혁·버스 노선 등은 예시 문구

@@ -26,12 +26,7 @@
 
 <div class="ad-wrap">
 
-  <!-- ⚠ 임시 저장 안내 : Supabase 연동 후 이 블록을 삭제하세요 -->
-  <div class="ad-notice">
-    <b>지금은 시안용 임시 저장 상태입니다.</b> 작성한 글은 <b>이 브라우저에만</b> 저장되며,
-    다른 PC나 방문자에게는 보이지 않습니다. 브라우저 기록을 지우면 함께 사라집니다.
-    실제로 공개하려면 Supabase 연동이 필요합니다.
-  </div>
+  <p class="ad-err" id="adErr" hidden></p>
 
   <div class="ad-head">
     <div>
@@ -55,21 +50,19 @@
 
   <div id="adListBox"></div>
 
-  <!-- 저장소 사용량 -->
-  <div class="ad-quota">
-    브라우저 임시 저장소 사용량
-    <div class="ad-quota-bar"><div class="ad-quota-fill" id="adQuotaFill"></div></div>
-    <b id="adQuotaTxt">0 KB</b> / 약 5 MB &nbsp;·&nbsp;
-    갤러리 사진을 많이 올리면 금방 찹니다. 가득 차면 저장이 실패합니다.
-  </div>
+  <p class="ad-foot-note" id="adWho"></p>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/supabase.config.js"></script>
 <script src="assets/js/site.config.js"></script>
 <script src="assets/js/data.js"></script>
 <script>
 (function(){
   "use strict";
-  if(!DATA_requireAdmin()){ return; }
+  /* 로그인 확인이 끝난 뒤에 화면을 구성합니다 (Supabase 세션 조회는 비동기) */
+  DATA_requireAdmin(start);
+  function start(){
 
   var tab      = "notice";
   var listBox  = document.getElementById("adListBox");
@@ -77,20 +70,30 @@
   var newBtn   = document.getElementById("adNew");
   var filterEl = document.getElementById("adFilter");
 
-  /* ---------------- 저장소 사용량 ---------------- */
-  function quota(){
-    var q = DATA_storageInfo();
-    var fill = document.getElementById("adQuotaFill");
-    fill.style.width = q.percent + "%";
-    fill.className = "ad-quota-fill" + (q.percent >= 80 ? " is-warn" : "");
-    document.getElementById("adQuotaTxt").textContent =
-      q.used > 1024*1024 ? (q.used/1024/1024).toFixed(1) + " MB"
-                         : Math.round(q.used/1024) + " KB";
+  /* ISO 날짜 → 2026-09-01 */
+  function AWL_ymd(v){ return String(v || "").substring(0,10); }
+
+  /* ---------------- 통신 오류 표시 ---------------- */
+  var errEl = document.getElementById("adErr");
+  function quota(){}                       /* (구 저장소 표시 자리 — 유지용) */
+  function showErr(res){
+    if(res && res.ok === false && res.message){
+      errEl.textContent = "서버 오류 : " + res.message;
+      errEl.hidden = false;
+    }else{
+      errEl.hidden = true;
+    }
   }
+
+  /* 로그인한 계정 표시 */
+  DATA_adminEmail(function(mail){
+    if(mail){ document.getElementById("adWho").textContent = "로그인 계정 : " + mail; }
+  });
 
   /* ---------------- 공지 목록 ---------------- */
   function renderNotice(){
     DATA_getNotices({ page:1, size:9999, keyword:"" }, function(res){
+      showErr(res);
       countEl.textContent = res.total;
       if(!res.total){
         listBox.innerHTML = "<p class=\"ad-empty\">등록된 공지사항이 없습니다.</p>";
@@ -109,7 +112,7 @@
             (r.is_top ? "<em class=\"ad-pin\">공지</em>" : "") +
             "<a href=\"notice-view.html?id=" + r.id + "\">" + DATA_esc(r.title) + "</a>" +
           "</td>" +
-          "<td class=\"ad-c-dt\" data-l=\"작성일\">" + DATA_esc(r.created_at) + "</td>" +
+          "<td class=\"ad-c-dt\" data-l=\"작성일\">" + DATA_esc(AWL_ymd(r.created_at)) + "</td>" +
           "<td class=\"ad-c-hit\" data-l=\"조회\">" + Number(r.views || 0) + "</td>" +
           "<td class=\"ad-c-act\">" +
             "<a class=\"ad-btn ad-btn--line ad-btn--sm\" href=\"admin-write.html?type=notice&id=" + r.id + "\">수정</a>" +
@@ -124,6 +127,7 @@
   /* ---------------- 갤러리 목록 ---------------- */
   function renderGallery(){
     DATA_getGallery({ page:1, size:9999, sort:"latest", keyword:"" }, function(res){
+      showErr(res);
       countEl.textContent = res.total;
       if(!res.total){
         listBox.innerHTML = "<p class=\"ad-empty\">등록된 갤러리 게시물이 없습니다.</p>";
@@ -144,7 +148,7 @@
           "</span></td>" +
           "<td class=\"ad-tit\"><a href=\"gallery-view.html?id=" + r.id + "\">" + DATA_esc(r.title) + "</a></td>" +
           "<td class=\"ad-c-hit\" data-l=\"사진\"><span class=\"ad-imgcnt\">" + n + "장</span></td>" +
-          "<td class=\"ad-c-dt\" data-l=\"작성일\">" + DATA_esc(r.created_at) + "</td>" +
+          "<td class=\"ad-c-dt\" data-l=\"작성일\">" + DATA_esc(AWL_ymd(r.created_at)) + "</td>" +
           "<td class=\"ad-c-act\">" +
             "<a class=\"ad-btn ad-btn--line ad-btn--sm\" href=\"admin-write.html?type=gallery&id=" + r.id + "\">수정</a>" +
             "<button type=\"button\" class=\"ad-btn ad-btn--danger ad-btn--sm\" " +
@@ -187,12 +191,15 @@
       ? DATA_esc(r.prefer_date)
       : "<span style=\"color:#AAB4BE\">미지정</span>";
 
-    /* 첨부파일 : 지금은 이름·용량만. Supabase Storage 연동 후 다운로드가 열립니다 */
-    var file = r.file_name
-      ? "<span class=\"ad-file-chip\">" + DATA_esc(r.file_name) +
-          " <b>" + DATA_fileSize(r.file_size) + "</b></span>" +
-        "<span class=\"ad-file-lock\">Supabase 연동 후 내려받기 가능</span>"
-      : "<span style=\"color:#AAB4BE\">없음</span>";
+    /* 첨부파일 : 버킷이 비공개라 눌렀을 때 60초짜리 서명 URL 을 발급받습니다 */
+    var file = r.file_path
+      ? "<button type=\"button\" class=\"ad-file-chip ad-file-get\" data-path=\"" + DATA_esc(r.file_path) + "\">" +
+          DATA_esc(r.file_name) + " <b>" + DATA_fileSize(r.file_size) + "</b> ↓</button>"
+      : (r.file_name
+          ? "<span class=\"ad-file-chip\">" + DATA_esc(r.file_name) +
+            " <b>" + DATA_fileSize(r.file_size) + "</b></span>" +
+            "<span class=\"ad-file-lock\">연동 이전에 접수된 건이라 파일이 없습니다</span>"
+          : "<span style=\"color:#AAB4BE\">없음</span>");
 
     /* 메모 */
     var memos = r.memos || [], m = "";
@@ -214,7 +221,7 @@
         "<span class=\"ad-sub-name\">" + DATA_esc(r.name) + "</span>" +
         "<span class=\"ad-sub-field\">" + DATA_esc(r.field) + "</span>" +
         "<em class=\"ad-badge\" data-s=\"" + st + "\">" + st + "</em>" +
-        "<span class=\"ad-sub-at\">" + DATA_esc(r.created_at) + "</span>" +
+        "<span class=\"ad-sub-at\">" + DATA_esc(DATA_dateTime(r.created_at)) + "</span>" +
       "</div>" +
       "<div class=\"ad-sub-body\">" +
         "<dl class=\"ad-dl\">" +
@@ -246,6 +253,7 @@
 
   function renderApply(){
     DATA_getApplications({ status: applyStatus, keyword:"" }, function(res){
+      showErr(res);
       countEl.textContent = res.total;
       subFilter(res.counts, res.all);
       if(!res.total){
@@ -280,11 +288,23 @@
       var sel = card.querySelector(".ad-st");
       t.disabled = true; t.textContent = "저장 중";
       DATA_updateApplication(id, { status: sel.value }, function(res){
-        if(!res.ok){ window.alert("상태 저장에 실패했습니다."); }
+        if(!res.ok){ window.alert("상태 저장에 실패했습니다.\n" + (res.message || "")); }
         renderApply(); quota();
       });
       return;
     }
+    /* 첨부파일 내려받기 : 비공개 버킷이라 임시 주소를 받아 새 창으로 엽니다 */
+    var fpath = t.getAttribute("data-path");
+    if(fpath){
+      t.disabled = true;
+      DATA_getFileUrl(fpath, function(res){
+        t.disabled = false;
+        if(res.ok){ window.open(res.url, "_blank", "noopener"); }
+        else{ window.alert("파일 주소를 받지 못했습니다.\n" + (res.message || "")); }
+      });
+      return;
+    }
+
     if(t.classList.contains("ad-del")){
       var who = t.getAttribute("data-name") || "";
       if(!window.confirm("‘" + who + "’ 님의 상담신청을 삭제할까요?\n메모까지 함께 지워지며 되돌릴 수 없습니다.")){ return; }
@@ -314,7 +334,7 @@
     DATA_updateApplication(id, { addMemo: text }, function(res){
       if(!res.ok){
         btn.disabled = false; btn.textContent = "추가";
-        window.alert("메모 저장에 실패했습니다. 저장소 용량을 확인해 주세요.");
+        window.alert("메모 저장에 실패했습니다.\n" + (res.message || ""));
         return;
       }
       renderApply(); quota();
@@ -363,7 +383,7 @@
     if(!window.confirm("‘" + title + "’ 을(를) 삭제할까요?\n삭제한 글은 되돌릴 수 없습니다.")){ return; }
 
     var done = function(res){
-      if(!res.ok){ window.alert("삭제에 실패했습니다."); }
+      if(!res.ok){ window.alert("삭제에 실패했습니다.\n" + (res.message || "")); }
       render();
     };
     if(tab === "notice"){ DATA_deleteNotice(id, done); }
@@ -372,11 +392,11 @@
 
   /* ---------------- 로그아웃 ---------------- */
   document.getElementById("adLogout").addEventListener("click", function(){
-    DATA_logout();
-    window.location.replace("admin-login.html");
+    DATA_logout(function(){ window.location.replace("admin-login.html"); });
   });
 
   render();
+  }
 })();
 </script>
 </body>
