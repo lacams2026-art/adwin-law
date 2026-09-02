@@ -185,7 +185,7 @@ html.awl-js [data-reveal].is-in{opacity:1;transform:none;transition:opacity .7s 
   .awl-sv h2{font-size:29px}
   .awl-sv-inner{padding:48px 24px 42px}
   .awl-ft-main{grid-template-columns:1fr;gap:30px;padding:42px 0 46px}
-  .awl-ft-right{text-align:left}
+  .awl-ft-right{text-align:left; order:-1;}
   .awl-ft-top .awl-wrap{gap:12px 22px}
   .awl-quick{right:14px;bottom:14px}
   .awl-quick a,.awl-quick button{width:46px;height:46px}
